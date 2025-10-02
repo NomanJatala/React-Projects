@@ -1,7 +1,7 @@
 import { useState } from "react";
 import Button from "./components/Button";
 import { nanoid } from "nanoid/non-secure";
-
+import confetti from "canvas-confetti";
 export default function TenziGame() {
   function generateRandomValue() {
     return new Array(10).fill(0).map(() => ({
@@ -11,14 +11,28 @@ export default function TenziGame() {
     }));
   }
   // next state has value of  upper ^ {generateRandomValue} function
-  const [next, setNext] = useState(generateRandomValue());
+  const [next, setNext] = useState(() => generateRandomValue());
   // Won the game function that renders the winning text when all the dices are held
-  function won(){
-    if (next.every((btnObj) => btnObj.isHeld)) {
-      return <div className="mt-10 text-green-500 text-2xl font-bold">You Win this Game</div>
+  function won() {
+    const win = next.every((btnObj) => btnObj.isHeld && btnObj.value === next[0].value)
+    if (win) {
+      confetti({
+        particleCount: 100,
+        angle: 60, // left side se center ki taraf
+        spread: 55,
+        origin: { x: 0, y: 0.7 }, // left edge
+      });
+      confetti({
+        particleCount: 100,
+        angle: 120, // right side se center ki taraf
+        spread: 55,
+        origin: { x: 1, y: 0.7 }, // right edge
+      });
     }
+    return win; // returning the win variable {true or false
   }
-  const win=won(); // ^ calling the won function
+  won(); // ^ calling the won function
+
   // toggle function to change color when clicked
   function toggle(id) {
     setNext((prev) =>
@@ -28,15 +42,19 @@ export default function TenziGame() {
     );
   }
   // roll dice for only those who has isHeld {false} isHeld is false
+
   function rolldice() {
-    setNext((prev) =>
-      prev.map((btnObj) =>
-        btnObj.isHeld
-          ? btnObj
-          : { ...btnObj, value: Math.ceil(Math.random() * 6) }
-      )
-    );
+    if (!won()) {
+      setNext((prev) =>
+        prev.map((btnObj) =>
+          btnObj.isHeld
+      ? btnObj
+      : { ...btnObj, value: Math.ceil(Math.random() * 6) }
+    )
+      );
+    }
   }
+
   //  refresh game function
   function refreshPage() {
     setNext(generateRandomValue());
@@ -50,10 +68,10 @@ export default function TenziGame() {
           onClick={refreshPage}
           className="bg-blue-500 mb-4 hover:bg-blue-700 text-white px-4 py-2 rounded-lg"
         >
-          Refresh
+          New Game
         </button>
-        
-          {/* Dices */}
+
+        {/* Dices */}
         <div className="bg-white flex flex-wrap justify-center items-center w-96 h-86 rounded-lg shadow-lg">
           {next.map((btnObj) => (
             <Button
@@ -70,10 +88,9 @@ export default function TenziGame() {
             onClick={rolldice}
             className="bg-blue-500 hover:bg-blue-700  text-white px-4 py-2 rounded-lg"
           >
-            Roll
+           Roll
           </button>
         </div>
-        {win}
       </div>
     </>
   );
